@@ -142,7 +142,8 @@
           <li><b>% change:</b> price ÷ price on the start date − 1</li>
           <li><b>$10 a month:</b> each month buy $10 ÷ that month's price in units; worth = units owned × latest price</li>
           <li><b>% return:</b> worth ÷ total invested − 1</li>
-          <li>Prices only: no dividends, fees or taxes, and not adjusted for inflation.</li>
+          <li><b>S&amp;P 500 + Dividends:</b> each month's dividend (Shiller's annual dividend ÷ 12) buys more shares at that month's price. Dividends lag a few months, so the latest months reuse the last known dividend.</li>
+          <li>Every other line is price only: the NASDAQ and Dow leave out their dividends. Nothing includes fees or taxes or is adjusted for inflation.</li>
         </ul>
       </div>
       <div>
@@ -159,9 +160,11 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/4.1.2/plotly-basic.min.js"></script>
 <script>
-// colors carried over from the R report; Macrotrends page ids for the sources
+// colors carried over from the R report; Macrotrends page ids for the sources.
+// S&P 500 + Dividends is built from the S&P prices and Shiller's dividends.
 const ASSETS = [
   { k: 'sp500',  name: 'S&P 500',   color: '#619CFF', id: 2324 },
+  { k: 'sp500tr', name: 'S&P 500 + Dividends', color: '#2B4FA8', dash: 'dot' },
   { k: 'nasdaq', name: 'NASDAQ',    color: '#2E8B57', id: 1320 },
   { k: 'dow',    name: 'Dow Jones', color: '#8B0000', id: 1319 },
   { k: 'gold',   name: 'Gold',      color: '#DAA520', id: 1333 },
@@ -181,9 +184,22 @@ const parse = text => text.trim().split('\n').slice(1).map(line => {
   return [`${y}-${m}-${day}`, Number(v)]
 })
 
-Promise.all(ASSETS.map(a => fetch(`data/data_${a.k}.csv`).then(r => { if (!r.ok) throw new Error(a.k); return r.text() })))
+const FILES = [...ASSETS.filter(a => a.id).map(a => a.k), 'sp500_dividends']
+Promise.all(FILES.map(k => fetch(`data/data_${k}.csv`).then(r => { if (!r.ok) throw new Error(k); return r.text() })))
 .then(texts => {
-const D = Object.fromEntries(ASSETS.map((a, i) => [a.k, parse(texts[i])]))
+const D = Object.fromEntries(FILES.map((k, i) => [k, parse(texts[i])]))
+
+// S&P 500 + Dividends: an index that starts at the S&P's first price and each
+// month also earns that month's dividend (annual dividend / 12), reinvested.
+// Shiller's dividends lag a few months, so missing months reuse the last one.
+const divs = Object.fromEntries(D.sp500_dividends.map(([d, v]) => [d.slice(0, 7), v]))
+let div = 0
+D.sp500tr = D.sp500.map(([d, p], i, sp) => {
+  div = divs[d.slice(0, 7)] ?? div
+  return [d, i === 0 ? p : 0, p, div]
+})
+D.sp500tr.forEach((r, i, a) => { if (i) r[1] = a[i - 1][1] * (r[2] + r[3] / 12) / a[i - 1][2] })
+D.sp500tr = D.sp500tr.map(([d, v]) => [d, v])
 
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim()
 const monthYear = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
@@ -229,7 +245,7 @@ function logTicks(lo, hi) {
 const line = (a, x, y, text, last) => ({ x, y, customdata: text, meta: a.k, type: 'scatter', mode: 'lines',
   name: `${a.name} <b style="color:${a.color}">${last}</b>`,
   visible: state.on.has(a.k) ? true : 'legendonly',
-  line: { color: a.color, width: 2 }, hovertemplate: `%{customdata}<extra>${a.name}</extra>` })
+  line: { color: a.color, width: 2, dash: a.dash || 'solid' }, hovertemplate: `%{customdata}<extra>${a.name}</extra>` })
 const legend = () => narrow()
   ? { orientation: 'h', x: 0, y: -0.12, yanchor: 'top', font: { size: 12, color: css('--fg') } }
   : { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, yanchor: 'top', font: { size: 13, color: css('--fg') }, tracegroupgap: 6 }
@@ -264,6 +280,7 @@ function drawGrowth() {
   }), config)
   const notes = []
   late.forEach(a => notes.push(`${a.name} data starts in ${monthYear(D[a.k][0][0])}; pick a later date to include it.`))
+  if (gUnit === 'price' && state.on.has('sp500tr')) notes.push('S&P 500 + Dividends in Price view is the S&P level with every dividend since Dec 1927 reinvested.')
   if (gUnit === 'price') notes.push('Prices are in each asset\'s own units: index points, dollars per ounce (gold, silver) or per pound (copper).')
   document.getElementById('growthNote').textContent = notes.join(' ')
 }
@@ -352,7 +369,8 @@ let wasNarrow = narrow()
 addEventListener('resize', () => { if (narrow() !== wasNarrow) { wasNarrow = narrow(); drawGrowth(); drawDca() } })
 
 document.getElementById('sources').innerHTML = 'Monthly prices from <a href="https://www.macrotrends.net/">Macrotrends</a>: ' +
-  ASSETS.map(a => `<a href="https://www.macrotrends.net/${a.id}/">${a.name}</a>`).join(', ')
+  ASSETS.filter(a => a.id).map(a => `<a href="https://www.macrotrends.net/${a.id}/">${a.name}</a>`).join(', ') +
+  '. S&amp;P 500 dividends from <a href="https://shillerdata.com/">Robert Shiller</a>.'
 document.getElementById('span').textContent = `Data through ${longDate(LAST)}; the latest month is partial.`
 
 function drawAll() { drawGrowth(); drawDca(); drawTable() }
