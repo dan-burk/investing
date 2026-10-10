@@ -1,0 +1,57 @@
+# Refresh Macrotrends data and deploy to GitHub Pages. Runs on every push to
+# main and monthly. Refreshed CSVs are committed back, so the repo always holds
+# the deployed data and the schedule never goes 60 days without activity
+# (GitHub pauses idle schedules). An asset that fails keeps its committed CSV;
+# if Macrotrends blocks GitHub, run scripts/fetch-data.mjs locally and push.
+name: Refresh data and deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 14 2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: node scripts/fetch-data.mjs
+
+      # pushes made with GITHUB_TOKEN don't trigger another run
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || { git commit -m "Refresh Macrotrends data" && git push; }
+
+      - run: mkdir _site && cp -r index.html logo.svg data _site/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

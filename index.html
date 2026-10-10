@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stocks vs. Metals</title>
+<meta name="description" content="How the S&P 500, NASDAQ, Dow, gold, silver and copper have performed since 1927, and what $10 a month in each would be worth today.">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<!-- Google tag (gtag.js); only reports from the live site, so local dev doesn't pollute analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3HK7FW9Y6N"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  if (location.hostname === 'danielburkhalter.dev') {
+    gtag('js', new Date());
+    gtag('config', 'G-3HK7FW9Y6N');
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* One column, light only like the coin pages: growth, $10 a month, and the rank table; chart legends pick the assets for every view. */
+  :root {
+    --bg: #ffffff;
+    --fg: #111318;
+    --muted: #6b7280;
+    --faint: #9ca3af;
+    --line: #eceef1;
+    --soft: #f6f7f9;
+    --grid: #eef0f3;
+    --focus: #619cff;
+    --rank-best: #cdeccf;
+    --rank-worst: #f6cdc8;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-feature-settings: "tnum" 1;
+  }
+  main { max-width: 960px; margin: 0 auto; padding-inline: 16px; padding-block: 56px 64px; }
+  h1 { font-size: 32px; letter-spacing: -0.02em; margin: 0; text-wrap: balance; display: flex; align-items: center; gap: 10px; }
+  .lede { color: var(--muted); margin: 6px 0 0; max-width: 62ch; }
+  .seg button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  section { margin-top: 48px; }
+  .head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+  h2 { font-size: 18px; margin: 0; }
+  .why { color: var(--muted); margin: 8px 0 0; max-width: 70ch; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 6px; }
+  .date { font: inherit; font-size: 13px; color: var(--fg); background: var(--soft); border: 0; border-radius: 10px; padding: 8px 12px; min-height: 36px; }
+  .date:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .sub { margin-top: 32px; }
+  .seg { display: inline-flex; flex-wrap: wrap; background: var(--soft); border-radius: 10px; padding: 3px; gap: 2px; }
+  .seg button {
+    font: inherit; font-size: 13px; color: var(--muted); background: transparent; border: 0;
+    border-radius: 8px; padding: 6px 12px; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 14px 0 0; }
+  .fact { background: var(--soft); border-radius: 12px; padding: 14px 16px; }
+  .fact span { display: block; font-size: 12px; color: var(--muted); }
+  .fact b { font-size: 22px; letter-spacing: -0.01em; }
+  .fact small { display: block; font-size: 12px; color: var(--faint); }
+  .chart { width: 100%; height: 500px; }
+  .chart.short { height: 340px; }
+  .note { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: separate; border-spacing: 3px; width: 100%; min-width: 560px; font-size: 14px; }
+  th { font-size: 12px; font-weight: 600; color: var(--muted); text-align: right; padding: 4px 10px; white-space: nowrap; }
+  th:first-child { text-align: left; }
+  td { padding: 10px; text-align: right; border-radius: 6px; white-space: nowrap; }
+  td:first-child { text-align: left; color: var(--muted); font-size: 13px; }
+  td small { display: block; font-size: 11px; color: var(--muted); }
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px 40px; }
+  .notes h4 { margin: 0 0 6px; font-size: 12px; font-weight: 600; color: var(--fg); }
+  .notes ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+  .notes b { color: var(--fg); font-weight: 500; }
+  footer a { color: inherit; }
+  @media (max-width: 520px) {
+    main { padding-top: 36px; }
+    .seg button, .date { min-height: 44px; }
+    .chart { height: 440px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1><img src="logo.svg" alt="" width="40" height="40" style="margin-left: -4px">Stocks vs. Metals</h1>
+  <p class="lede">How the S&amp;P 500, NASDAQ, Dow, gold, silver and copper have performed since 1927, and what $10 a month in each would be worth today.</p>
+
+  <section>
+    <h2 id="growthTitle">Growth since</h2>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Start" id="gStart"></div>
+      <input class="date" type="date" id="gDate" aria-label="Start date">
+      <div class="seg" role="group" aria-label="Units"><button data-g-unit="pct" aria-pressed="true">% Change</button><button data-g-unit="price" aria-pressed="false">Price</button></div>
+      <div class="seg" role="group" aria-label="Scale"><button data-g-scale="linear" aria-pressed="false">Linear</button><button data-g-scale="log" aria-pressed="true">Log</button></div>
+    </div>
+    <div class="chart" id="chartGrowth"></div>
+    <p class="why">Each asset's price compared with its price on the start date. Click a legend entry to show or hide that asset everywhere.</p>
+    <p class="note" id="growthNote"></p>
+  </section>
+
+  <section>
+    <h2>Dollar Cost Average $10/Month</h2>
+    <div class="facts" id="facts"></div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Start investing" id="dStart"></div>
+      <div class="seg" role="group" aria-label="Scale"><button data-d-scale="linear" aria-pressed="false">Linear</button><button data-d-scale="log" aria-pressed="true">Log</button></div>
+    </div>
+    <div class="chart" id="chartDca"></div>
+    <p class="why">Buy $10 of each asset every month from the start date through this month. Hold, never sell. Click a legend entry to show or hide that asset everywhere.</p>
+
+    <div class="sub">
+      <h2 id="barTitle">Worth today</h2>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Measure"><button data-d-bar="usd" aria-pressed="true">Dollars</button><button data-d-bar="pct" aria-pressed="false">% return</button></div>
+      </div>
+      <div class="chart short" id="chartBar"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Performance Summary Over Time</h2>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Measure"><button data-t-unit="usd" aria-pressed="true">Dollars</button><button data-t-unit="pct" aria-pressed="false">% return</button></div>
+    </div>
+    <div class="table-wrap"><table id="rank"></table></div>
+    <p class="why">What $10 a month is worth today, if we started investing on the specified start date.</p>
+  </section>
+
+  <footer>
+    <div class="notes">
+      <div>
+        <h4>How it's calculated</h4>
+        <ul>
+          <li><b>% change:</b> price ÷ price on the start date − 1</li>
+          <li><b>$10 a month:</b> each month buy $10 ÷ that month's price in units; worth = units owned × latest price</li>
+          <li><b>% return:</b> worth ÷ total invested − 1</li>
+          <li>Prices only: no dividends, fees or taxes, and not adjusted for inflation.</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Sources</h4>
+        <ul>
+          <li id="sources"></li>
+          <li id="span"></li>
+          <li>For information only, not investment advice.</li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/4.1.2/plotly-basic.min.js"></script>
+<script>
+// colors carried over from the R report; Macrotrends page ids for the sources
+const ASSETS = [
+  { k: 'sp500',  name: 'S&P 500',   color: '#619CFF', id: 2324 },
+  { k: 'nasdaq', name: 'NASDAQ',    color: '#2E8B57', id: 1320 },
+  { k: 'dow',    name: 'Dow Jones', color: '#8B0000', id: 1319 },
+  { k: 'gold',   name: 'Gold',      color: '#DAA520', id: 1333 },
+  { k: 'silver', name: 'Silver',    color: '#696969', id: 1470 },
+  { k: 'copper', name: 'Copper',    color: '#CD5B45', id: 1476 },
+]
+// the R report's reference dates; the date picker allows any other
+const GROWTH_STARTS = ['1927-12-31', '1971-02-26']
+const DCA_STARTS = ['1971-02-26', '1981-02-27', '1991-02-28', '2001-02-28', '2011-02-28', '2021-02-28']
+const MONTHLY = 10
+
+// CSV rows are "MM/DD/YYYY",value; keep them as ['YYYY-MM-DD', value]
+const parse = text => text.trim().split('\n').slice(1).map(line => {
+  const [d, v] = line.replace(/"/g, '').split(',')
+  const [m, day, y] = d.split('/')
+  return [`${y}-${m}-${day}`, Number(v)]
+})
+
+Promise.all(ASSETS.map(a => fetch(`data/data_${a.k}.csv`).then(r => { if (!r.ok) throw new Error(a.k); return r.text() })))
+.then(texts => {
+const D = Object.fromEntries(ASSETS.map((a, i) => [a.k, parse(texts[i])]))
+
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim()
+const monthYear = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+const longDate = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+// the most recent price in the data, i.e. the last Macrotrends refresh
+const LAST = ASSETS.map(a => D[a.k][D[a.k].length - 1][0]).sort().pop()
+const fmt$ = v => '$' + Math.round(v).toLocaleString('en-US')
+const fmtPrice = v => '$' + v.toLocaleString('en-US', { maximumFractionDigits: v < 10 ? 2 : 0 })
+const fmtPct = v => v.toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%'
+
+const state = { on: new Set(ASSETS.map(a => a.k).filter(k => k !== 'dow')), gStart: '1971-02-26', gUnit: 'pct', gScale: 'log', dStart: '1971-02-26', dScale: 'log', dBar: 'usd', tUnit: 'usd' }
+const visible = () => ASSETS.filter(a => state.on.has(a.k))
+const from = (k, start) => D[k].filter(r => r[0] >= start)
+
+// dollar-cost averaging: buy MONTHLY dollars every row, including the last one
+function dca(k, start) {
+  let units = 0
+  return from(k, start).map(([d, v], i) => { units += MONTHLY / v; return { d, worth: units * v, invested: (i + 1) * MONTHLY } })
+}
+const final = (k, start) => { const r = dca(k, start); const L = r[r.length - 1]; return { ...L, pct: (L.worth / L.invested - 1) * 100, months: r.length } }
+
+function axis(extra = {}) {
+  return Object.assign({ gridcolor: css('--grid'), zeroline: false, linecolor: css('--line'), tickfont: { color: css('--muted') }, automargin: true }, extra)
+}
+function base(extra = {}) {
+  return Object.assign({
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'Inter, system-ui, sans-serif', size: 12, color: css('--muted') },
+    hovermode: 'x unified',
+    hoverlabel: { bgcolor: css('--bg'), bordercolor: css('--line'), font: { color: css('--fg') } },
+    showlegend: false,
+  }, extra)
+}
+const config = { displayModeBar: false, responsive: true }
+const narrow = () => innerWidth < 600
+// log-axis ticks at 1-2-5 steps spanning the data
+function logTicks(lo, hi) {
+  const vals = []
+  for (let e = Math.floor(Math.log10(lo)); e <= Math.ceil(Math.log10(hi)); e++)
+    for (const m of [1, 2, 5]) { const v = +(m * 10 ** e).toPrecision(1); if (v >= lo / 1.5 && v <= hi * 1.5) vals.push(v) }
+  return vals
+}
+const line = (a, x, y, text, last) => ({ x, y, customdata: text, meta: a.k, type: 'scatter', mode: 'lines',
+  name: `${a.name} <b style="color:${a.color}">${last}</b>`,
+  visible: state.on.has(a.k) ? true : 'legendonly',
+  line: { color: a.color, width: 2 }, hovertemplate: `%{customdata}<extra>${a.name}</extra>` })
+const legend = () => narrow()
+  ? { orientation: 'h', x: 0, y: -0.12, yanchor: 'top', font: { size: 12, color: css('--fg') } }
+  : { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, yanchor: 'top', font: { size: 13, color: css('--fg') }, tracegroupgap: 6 }
+
+function drawGrowth() {
+  const { gStart, gUnit, gScale } = state, log = gScale === 'log'
+  // an asset whose data starts after the start date has nothing to compare against, so it sits out
+  const late = ASSETS.filter(a => D[a.k][0][0] > gStart)
+  const series = ASSETS.filter(a => !late.includes(a)).map(a => {
+    const rows = from(a.k, gStart), b = rows[0][1]
+    // % change on a log axis plots the growth multiple and labels it as % change
+    const y = rows.map(([, v]) => gUnit === 'price' ? v : log ? v / b : (v / b - 1) * 100)
+    const text = rows.map(([, v]) => gUnit === 'price' ? fmtPrice(v) : fmtPct((v / b - 1) * 100))
+    return { a, x: rows.map(r => r[0]), y, text }
+  })
+  const t = series.map(s => line(s.a, s.x, s.y, s.text, s.text[s.text.length - 1]))
+  const all = series.filter(s => state.on.has(s.a.k)).flatMap(s => s.y).filter(v => v > 0)
+  let yaxis
+  if (log) {
+    const lo = Math.min(...all), hi = Math.max(...all)
+    // % ticks at round percents (-50%, 0%, 100%, 500%, 1,000%, ...), placed at their growth multiple
+    const pcts = [-90, -75, -50, 0, 100, ...logTicks(500, 1e7)]
+    const vals = gUnit === 'price' ? logTicks(lo, hi) : pcts.map(p => 1 + p / 100).filter(m => m >= lo / 1.5 && m <= hi * 1.5)
+    yaxis = axis({ type: 'log', tickvals: vals, ticktext: vals.map(v => gUnit === 'price' ? fmtPrice(v) : fmtPct(Math.round((v - 1) * 100))) })
+  } else yaxis = axis(gUnit === 'price' ? { tickprefix: '$', tickformat: ',.0f' } : { ticksuffix: '%', tickformat: ',.0f' })
+  document.getElementById('growthTitle').textContent = 'Growth since ' + longDate(gStart)
+  Plotly.react('chartGrowth', t, base({
+    showlegend: true, legend: legend(),
+    margin: { l: narrow() ? 48 : 64, r: 8, t: 10, b: 30 },
+    xaxis: axis({ type: 'date', hoverformat: '%b %Y' }),
+    yaxis,
+  }), config)
+  const notes = []
+  late.forEach(a => notes.push(`${a.name} data starts in ${monthYear(D[a.k][0][0])}; pick a later date to include it.`))
+  if (gUnit === 'price') notes.push('Prices are in each asset\'s own units: index points, dollars per ounce (gold, silver) or per pound (copper).')
+  document.getElementById('growthNote').textContent = notes.join(' ')
+}
+
+function drawDca() {
+  const { dStart, dScale, dBar } = state, log = dScale === 'log'
+  const shown = visible()
+  const series = ASSETS.map(a => ({ a, rows: dca(a.k, dStart) }))
+  const t = series.map(({ a, rows }) => line(a, rows.map(r => r.d), rows.map(r => r.worth),
+    rows.map(r => `${fmt$(r.worth)} <span style="color:${css('--muted')}">of ${fmt$(r.invested)} invested</span>`), fmt$(rows[rows.length - 1].worth)))
+  const all = t.filter(tr => tr.visible === true).flatMap(tr => tr.y)
+  let yaxis = axis({ tickprefix: '$', tickformat: ',.0f', rangemode: 'tozero' })
+  if (log) { const vals = logTicks(Math.min(...all), Math.max(...all)); yaxis = axis({ type: 'log', tickvals: vals, ticktext: vals.map(fmt$) }) }
+  Plotly.react('chartDca', t, base({
+    showlegend: true, legend: legend(),
+    margin: { l: narrow() ? 56 : 72, r: 8, t: 10, b: 30 },
+    xaxis: axis({ type: 'date', hoverformat: '%b %Y' }),
+    yaxis,
+  }), config)
+
+  // bars: final value, largest to smallest
+  const F = shown.map(a => ({ a, ...final(a.k, dStart) })).sort((p, q) => dBar === 'usd' ? q.worth - p.worth : q.pct - p.pct)
+  const val = f => dBar === 'usd' ? f.worth : f.pct
+  Plotly.react('chartBar', [{
+    type: 'bar', x: F.map(f => f.a.name), y: F.map(val), marker: { color: F.map(f => f.a.color) },
+    text: F.map(f => dBar === 'usd' ? fmt$(f.worth) : fmtPct(f.pct)), textposition: 'outside', cliponaxis: false,
+    textfont: { color: css('--fg'), size: 12 },
+    customdata: F.map(f => `${fmt$(f.worth)} from ${fmt$(f.invested)} invested (${fmtPct(f.pct)})`),
+    hovertemplate: '%{customdata}<extra>%{x}</extra>',
+  }], base({
+    hovermode: 'closest', bargap: 0.35, barcornerradius: 4,
+    margin: { l: 72, r: 8, t: 24, b: 36 },
+    xaxis: axis({ fixedrange: true, linecolor: css('--line') }),
+    yaxis: axis(dBar === 'usd' ? { tickprefix: '$', tickformat: ',.0f', fixedrange: true } : { ticksuffix: '%', tickformat: ',.0f', fixedrange: true }),
+  }), config)
+  document.getElementById('barTitle').textContent = `Worth today (${longDate(LAST)}), $10 a month since ${monthYear(dStart)}`
+
+  const best = F.reduce((p, q) => q.worth > p.worth ? q : p), worst = F.reduce((p, q) => q.worth < p.worth ? q : p)
+  const f = [
+    ['Invested', fmt$(best.invested), `$10 a month for ${best.months} months`],
+    [`Best: ${best.a.name}`, fmt$(best.worth), `${fmtPct(best.pct)} return`],
+    [`Worst: ${worst.a.name}`, fmt$(worst.worth), `${fmtPct(worst.pct)} return`],
+  ]
+  document.getElementById('facts').innerHTML = shown.length ? f.map(([a, b, c]) => `<div class="fact"><span>${a}</span><b>${b}</b><small>${c}</small></div>`).join('') : ''
+}
+
+// rank table: rows are start dates, cells shaded from best (green) to worst (red) within each row
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16))
+const mix = (p, q, t) => 'rgb(' + hex(p).map((c, i) => Math.round(c + (hex(q)[i] - c) * t)).join(',') + ')'
+function drawTable() {
+  const shown = visible(), unit = state.tUnit
+  const ord = n => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th')
+  const head = `<thead><tr><th>Start</th>${shown.map(a => `<th scope="col">${a.name}</th>`).join('')}</tr></thead>`
+  const body = DCA_STARTS.map(s => {
+    const F = shown.map(a => final(a.k, s)), v = F.map(f => unit === 'usd' ? f.worth : f.pct)
+    const rank = v.map(x => v.filter(y => y > x).length + 1)
+    const cells = F.map((f, i) => {
+      const bg = mix(css('--rank-best'), css('--rank-worst'), shown.length > 1 ? (rank[i] - 1) / (shown.length - 1) : 0)
+      return `<td style="background:${bg}" title="${fmt$(f.worth)} from ${fmt$(f.invested)} invested">${unit === 'usd' ? fmt$(f.worth) : fmtPct(f.pct)}<small>${ord(rank[i])}</small></td>`
+    }).join('')
+    return `<tr><td>${monthYear(s)}</td>${cells}</tr>`
+  }).join('')
+  document.getElementById('rank').innerHTML = head + `<tbody>${body}</tbody>`
+}
+
+// controls
+const pressed = (group, btn) => group.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)))
+document.getElementById('gStart').innerHTML = GROWTH_STARTS.map(d => `<button data-g-start="${d}" aria-pressed="${d === state.gStart}">${monthYear(d)}</button>`).join('')
+const gDate = document.getElementById('gDate')
+const FIRST = ASSETS.map(a => D[a.k][0][0]).sort()[0]
+const SP = D.sp500
+Object.assign(gDate, { min: FIRST, max: SP[SP.length - 2][0], value: state.gStart })
+gDate.addEventListener('change', () => {
+  if (!gDate.value || gDate.value < gDate.min || gDate.value > gDate.max) { gDate.value = state.gStart; return }
+  state.gStart = gDate.value
+  document.querySelectorAll('#gStart button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.gStart === state.gStart)))
+  drawGrowth()
+})
+document.getElementById('dStart').innerHTML = DCA_STARTS.map(d => `<button data-d-start="${d}" aria-pressed="${d === state.dStart}">${d.slice(0, 4)}</button>`).join('')
+const KEYS = { gStart: drawGrowth, gUnit: drawGrowth, gScale: drawGrowth, dStart: drawDca, dScale: drawDca, dBar: drawDca, tUnit: drawTable }
+document.querySelectorAll('.seg button').forEach(btn => {
+  const key = Object.keys(btn.dataset)[0]
+  btn.addEventListener('click', () => { state[key] = btn.dataset[key]; pressed(btn.parentElement, btn); if (key === 'gStart') gDate.value = state.gStart; KEYS[key]() })
+})
+let wasNarrow = narrow()
+addEventListener('resize', () => { if (narrow() !== wasNarrow) { wasNarrow = narrow(); drawGrowth(); drawDca() } })
+
+document.getElementById('sources').innerHTML = 'Monthly prices from <a href="https://www.macrotrends.net/">Macrotrends</a>: ' +
+  ASSETS.map(a => `<a href="https://www.macrotrends.net/${a.id}/">${a.name}</a>`).join(', ')
+document.getElementById('span').textContent = `Data through ${longDate(LAST)}; the latest month is partial.`
+
+function drawAll() { drawGrowth(); drawDca(); drawTable() }
+drawAll()
+
+// a legend click shows or hides that asset in every chart and the table
+function toggle(k) {
+  if (state.on.has(k)) { if (state.on.size === 1) return; state.on.delete(k) } else state.on.add(k)
+  drawAll()
+}
+for (const id of ['chartGrowth', 'chartDca']) {
+  const el = document.getElementById(id)
+  el.on('plotly_legendclick', e => { toggle(e.data[e.curveNumber].meta); return false })
+  el.on('plotly_legenddoubleclick', () => false)
+}
+
+}).catch(() => { document.querySelector('.lede').textContent = 'Data unavailable. Try reloading.' })
+</script>
+</body>
+</html>
