@@ -69,7 +69,7 @@
   .note { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
   .table-wrap { overflow-x: auto; }
   table { border-collapse: separate; border-spacing: 3px; width: 100%; min-width: 560px; font-size: 14px; }
-  th { font-size: 12px; font-weight: 600; color: var(--muted); text-align: right; padding: 4px 10px; white-space: nowrap; }
+  th { font-size: 12px; font-weight: 600; color: var(--muted); text-align: right; padding: 4px 10px; white-space: nowrap; vertical-align: bottom; line-height: 1.3; }
   th:first-child { text-align: left; }
   td { padding: 10px; text-align: right; border-radius: 6px; white-space: nowrap; }
   td:first-child { text-align: left; color: var(--muted); font-size: 13px; }
@@ -333,7 +333,7 @@ const mix = (p, q, t) => 'rgb(' + hex(p).map((c, i) => Math.round(c + (hex(q)[i]
 function drawTable() {
   const shown = visible(), unit = state.tUnit
   const ord = n => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th')
-  const head = `<thead><tr><th>Start</th>${shown.map(a => `<th scope="col">${a.name}</th>`).join('')}</tr></thead>`
+  const head = `<thead><tr><th>Start</th>${shown.map(a => `<th scope="col">${a.name.replace(' + ', '<br>+ ')}</th>`).join('')}</tr></thead>`
   const body = DCA_STARTS.map(s => {
     const F = shown.map(a => final(a.k, s)), v = F.map(f => unit === 'usd' ? f.worth : f.pct)
     const rank = v.map(x => v.filter(y => y > x).length + 1)
