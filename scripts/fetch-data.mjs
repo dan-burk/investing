@@ -1,7 +1,6 @@
-// Refreshes data/*.csv with full monthly history from Macrotrends. Runs in the
-// deploy workflow; an asset that fails keeps its previous CSV, so the site
-// always has complete (if stale) data. If GitHub's IPs get blocked, run this
-// (or scripts/download_macrotrends_data.R) locally and push the CSVs.
+// Refreshes data/*.csv with full monthly history from Macrotrends. An asset
+// that fails keeps its previous CSV. Macrotrends blocks GitHub's servers, so
+// run this locally each month, then commit and push the CSVs.
 //
 // Macrotrends returns 403 without browser-like headers, and blocks Node's own
 // fetch even with them (Cloudflare), so requests go through curl.
