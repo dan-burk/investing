@@ -19,7 +19,7 @@ const run = (cmd, args, opts = {}) => execFileSync(cmd, args, { cwd: root, encod
 // 1. Prices. fetch-data.mjs keeps an asset's old CSV when it fails, so a partial failure is still worth committing.
 console.log('Prices (Macrotrends)')
 const prices = run(process.execPath, ['scripts/fetch-data.mjs'])
-process.stdout.write(prices.replace(/^/gm, '  '))
+console.log(prices.trimEnd().replace(/^/gm, '  '))
 if (!prices.includes('✓')) { console.error('No prices updated; stopping.'); process.exit(1) }
 
 // 2. Dividends. Optional: Shiller updates every few months, and the page reuses the latest dividend meanwhile.
