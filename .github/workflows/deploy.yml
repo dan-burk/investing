@@ -1,6 +1,6 @@
 # Deploy to GitHub Pages on every push to main. Macrotrends blocks GitHub's
-# servers (403), so the data is refreshed by hand: run scripts/fetch-data.mjs
-# locally, commit the CSVs and push.
+# servers (403), so the data is refreshed from a PC: run
+# `node scripts/refresh.mjs`, which fetches, commits and pushes.
 name: Deploy
 
 on:
