@@ -1,4 +1,8 @@
+<p align="center"><img src="logo.svg" width="120"></p>
+
 # Stocks vs. Metals
+
+*Nearly a century of stocks and metals, and what $10 a month would have become.*
 
 ## Monthly routine
 
